@@ -1,8 +1,7 @@
 package example
 
-import common._
-
 object Lists {
+
   /**
    * This method computes the sum of all elements in the list xs. There are
    * multiple techniques that can be used for implementing this method, and
