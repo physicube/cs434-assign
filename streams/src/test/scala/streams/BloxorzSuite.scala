@@ -1,11 +1,15 @@
 package streams
 
-import org.junit._
-import org.junit.Assert.assertEquals
+import org.scalatest.FunSuite
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import Bloxorz._
 
-class BloxorzSuite {
+@RunWith(classOf[JUnitRunner])
+class BloxorzSuite extends FunSuite {
+
   trait SolutionChecker extends GameDef with Solver with StringParserTerrain {
     /**
      * This method applies a list of moves `ls` to the block at position
@@ -13,14 +17,12 @@ class BloxorzSuite {
      * is a valid solution, i.e. leads to the goal.
      */
     def solve(ls: List[Move]): Block =
-      ls.foldLeft(startBlock) { case (block, move) =>
-        require(block.isLegal) // The solution must always lead to legal blocks
-        move match {
-          case Left => block.left
-          case Right => block.right
-          case Up => block.up
-          case Down => block.down
-        }
+      ls.foldLeft(startBlock) { case (block, move) => move match {
+        case Left => block.left
+        case Right => block.right
+        case Up => block.up
+        case Down => block.down
+      }
     }
   }
 
@@ -38,38 +40,28 @@ class BloxorzSuite {
     val optsolution = List(Right, Right, Down, Right, Right, Right, Down)
   }
 
-
-  @Test def `terrain function level 1 (10pts)`: Unit =
+  test("terrain function level 1") {
     new Level1 {
       assert(terrain(Pos(0,0)), "0,0")
-      assert(terrain(Pos(1,1)), "1,1") // start
-      assert(terrain(Pos(4,7)), "4,7") // goal
-      assert(terrain(Pos(5,8)), "5,8")
-      assert(!terrain(Pos(5,9)), "5,9")
-      assert(terrain(Pos(4,9)), "4,9")
-      assert(!terrain(Pos(6,8)), "6,8")
       assert(!terrain(Pos(4,11)), "4,11")
-      assert(!terrain(Pos(-1,0)), "-1,0")
-      assert(!terrain(Pos(0,-1)), "0,-1")
     }
+  }
 
-  @Test def `find char level 1 (10pts)`: Unit =
+  test("findChar level 1") {
     new Level1 {
-      assertEquals(Pos(1, 1), startPos)
+      assert(startPos == Pos(1,1))
     }
+  }
 
-
-  @Test def `optimal solution for level 1 (5pts)`: Unit =
+  test("optimal solution for level 1") {
     new Level1 {
-      assertEquals(Block(goal, goal), solve(solution))
+      assert(solve(solution) == Block(goal, goal))
     }
+  }
 
-
-  @Test def `optimal solution length for level 1 (5pts)`: Unit =
+  test("optimal solution length for level 1") {
     new Level1 {
-      assertEquals(optsolution.length, solution.length)
+      assert(solution.length == optsolution.length)
     }
-
-
-  @Rule def individualTestTimeout = new org.junit.rules.Timeout(10 * 1000)
+  }
 }
