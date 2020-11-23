@@ -1,6 +1,6 @@
 submitProjectName := "nodescala"
 
-scalaVersion := "2.13.0"
+scalaVersion := "2.11.5"
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
