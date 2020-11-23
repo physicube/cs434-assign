@@ -10,6 +10,8 @@ import scala.collection.JavaConversions._
 import java.util.concurrent.{Executor, ThreadPoolExecutor, TimeUnit, LinkedBlockingQueue}
 import com.sun.net.httpserver.{HttpExchange, HttpHandler, HttpServer}
 import java.net.InetSocketAddress
+import scala.util.Failure
+import scala.util.Success
 
 /** Contains utilities common to the NodeScala© framework.
  */
@@ -30,7 +32,11 @@ trait NodeScala {
    *  @param body         the response to write back
    */
   private def respond(exchange: Exchange, token: CancellationToken, response: Response): Unit = {
-    
+    val responseIter = response.toIterator
+    while (responseIter.hasNext && token.nonCancelled) {
+      exchange.write(responseIter.next())
+    }
+    exchange.close()
   }
 
   /** A server:
@@ -43,7 +49,22 @@ trait NodeScala {
    *  @param handler        a function mapping a request to a response
    *  @return               a subscription that can stop the server and all its asynchronous operations *entirely*
    */
-  def start(relativePath: String)(handler: Request => Response): Subscription = ???
+  def start(relativePath: String)(handler: Request => Response): Subscription = {
+    val listener = createListener(relativePath)
+    val listenerSubscription = listener.start()
+    val token = Future.run() { ct =>
+      Future {
+        while (ct.nonCancelled) {
+          val nextRequest = listener.nextRequest()
+          nextRequest.onComplete {
+            case Failure(exception) => throw exception
+            case Success((request, exchange)) => Future(respond(exchange, ct, handler(request)))
+          }
+        }
+      }
+    }
+    token
+  }
 
 }
 
